@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ny">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amayi Anga - Mother's Day Malawi</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body{background:#f6f1eb; font-family:'Poppins',sans-serif; display:flex; justify-content:center; padding:15px; margin:0}
+.app{max-width:420px; width:100%; background:white; border-radius:20px; box-shadow:0 15px 40px rgba(0,0,0,0.1); overflow:hidden}
+.header{background:linear-gradient(90deg,#000000,#CE1126,#0B8223); padding:18px; text-align:center; color:white; position:relative}
+.header h1{font-family:'Playfair Display'; margin:0; font-size:22px}
+.header p{margin:3px 0 12px; font-size:12px; opacity:0.9}
+.lang-switch{display:inline-flex; background:rgba(255,255,255,0.15); border-radius:30px; padding:3px; backdrop-filter:blur(5px)}
+.lang-switch button{border:none; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; background:transparent; color:white; transition:0.2s}
+.lang-switch button.active{background:white; color:#000}
+.form{padding:18px}
+  label{font-size:13px; font-weight:600; display:block; margin:12px 0 6px}
+  input[type=text]{width:100%; padding:12px; border-radius:10px; border:1.5px solid #ddd; font-size:15px; box-sizing:border-box}
+  input[type=file]{width:100%; font-size:13px}
+.preview-wrap{margin-top:15px; background:#f9f9f9; border-radius:15px; padding:10px; text-align:center}
+  canvas{width:100%; height:auto; border-radius:12px; background:white}
+.btns{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px}
+  button{padding:13px; border-radius:12px; border:none; font-weight:600; font-size:14px; cursor:pointer}
+  #generateBtn{background:#000; color:white}
+  #downloadBtn{background:#0B8223; color:white; display:none}
+  #waBtn{background:#25D366; color:white; display:none}
+.hint{font-size:11px; color:#888; margin-top:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Amayi Anga ❤️</h1>
+    <p>Mother's Day Malawi - 15 October</p>
+    <div class="lang-switch">
+      <button id="btn-ny" class="active" onclick="setLang('ny')">Chichewa</button>
+      <button id="btn-en" onclick="setLang('en')">English</button>
+    </div>
+  </div>
+  <div class="form">
+    <label id="label-name">Dzina la Amayi</label>
+    <input type="text" id="mothersName" placeholder="e.g. Haleemah">
+
+    <label id="label-photo">Ponyani Chithunzi cha Amayi</label>
+    <input type="file" id="photoInput" accept="image/*">
+
+    <div class="preview-wrap">
+      <canvas id="cardCanvas" width="1080" height="1350"></canvas>
+      <div class="hint" id="hint-text">Pangani Check Chithunzicho - HD for WhatsApp Status</div>
+    </div>
+
+    <div class="btns">
+      <button id="generateBtn">Pangani Card</button>
+      <button id="downloadBtn">Download HD</button>
+    </div>
+    <button id="waBtn" style="width:100%; margin-top:10px">Tumizani ku WhatsApp</button>
+  </div>
+</div>
+
+<script>
+let userImage = null;
+let currentLang = 'ny'; // Chichewa default
+const canvas = document.getElementById('cardCanvas');
+const ctx = canvas.getContext('2d');
+
+const T = {
+  ny: {
+    labelName: "Dzina la Amayi",
+    labelPhoto: "Chithunzi cha Amayi",
+    placeholder: "e.g. Vibrant",
+    generate: "Pangani Card",
+    download: "Download HD",
+    wa: "Gawana ku WhatsApp",
+    hint: "Pangani Check Chithunzicho - HD for WhatsApp Status",
+    happy: "HAPPY MOTHER'S'",
+    subHappy: "DAY",
+    thank1: "Zikomo Chifukwa Cha",
+    thank2: "Chikondi Chanu!",
+    bottom: "❤ Amayi Ndi Chuma ❤",
+    noPhoto: "Chithunzi cha Amayi",
+    date: "15 October • Malawi • 2026"
+  },
+  en: {
+    labelName: "Mother's Name",
+    labelPhoto: "Upload Mother's Photo",
+    placeholder: "e.g. Mary",
+    generate: "Generate Card",
+    download: "Download HD",
+    wa: "Share to WhatsApp",
+    hint: "Preview will appear here - HD for WhatsApp Status",
+    happy: "HAPPY MOTHER'S DAY",
+    subHappy: "",
+    thank1: "Thank You For Your",
+    thank2: "Endless Love!",
+    bottom: "❤ A Mother is Peace ❤",
+    noPhoto: "Mother's Photo",
+    date: "15 October • Malawi • 2026"
+  }
+};
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById('btn-ny').classList.toggle('active', lang==='ny');
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  const t = T[lang];
+  document.getElementById('label-name').innerText = t.labelName;
+  document.getElementById('label-photo').innerText = t.labelPhoto;
+  document.getElementById('mothersName').placeholder = t.placeholder;
+  document.getElementById('generateBtn').innerText = t.generate;
+  document.getElementById('downloadBtn').innerText = t.download;
+  document.getElementById('waBtn').innerText = t.wa;
+  document.getElementById('hint-text').innerText = t.hint;
+  drawCard();
+}
+
+document.getElementById('photoInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const img = new Image();
+  img.onload = ()=>{ userImage = img; drawCard(); }
+  img.src = URL.createObjectURL(file);
+});
+
+document.getElementById('generateBtn').addEventListener('click', drawCard);
+document.getElementById('mothersName').addEventListener('input', drawCard);
+
+function drawCard(){
+  const t = T[currentLang];
+  const name = document.getElementById('mothersName').value.trim() || (currentLang==='ny'? "Anga" : "My Love");
+
+  // Clear
+  ctx.clearRect(0,0,1080,1350);
+
+  // Background - Malawi Flag Gradient
+  const grad = ctx.createLinearGradient(0,0,0,1350);
+  grad.addColorStop(0, '#0a0a0a');
+  grad.addColorStop(0.33, '#CE1126');
+  grad.addColorStop(0.66, '#0B8223');
+  grad.addColorStop(1, '#061a0b');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,1080,1350);
+
+  // Decorative sun
+  ctx.fillStyle = 'rgba(255,215,0,0.12)';
+  ctx.beginPath();
+  ctx.arc(540, 360, 300, 0, Math.PI*2);
+  ctx.fill();
+
+  // --- FIXED SPACING HERE ---
+  // Photo center Y is now 360, with clear gap to text
+  const photoY = 360;
+  const cardTop = 590; // was 520, now 590 = +70px space
+  const cardHeight = 720;
+
+  // White Card Center
+  ctx.fillStyle = '#ffffff';
+  roundRect(60, cardTop, 960, cardHeight, 35);
+  ctx.fill();
+
+  // Photo - Circular with Malawi border
+  if(userImage){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(540, photoY, 212, 0, Math.PI*2); ctx.fillStyle = '#000000'; ctx.fill();
+    ctx.beginPath(); ctx.arc(540, photoY, 202, 0, Math.PI*2); ctx.fillStyle = '#CE1126'; ctx.fill();
+    ctx.beginPath(); ctx.arc(540, photoY, 192, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
+
+    ctx.beginPath(); ctx.arc(540, photoY, 180, 0, Math.PI*2); ctx.clip();
+    const size = 360;
+    const scale = Math.max(size / userImage.width, size / userImage.height);
+    const w = userImage.width * scale;
+    const h = userImage.height * scale;
+    ctx.drawImage(userImage, 540 - w/2, photoY - h/2, w, h);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = '#eee';
+    ctx.beginPath(); ctx.arc(540, photoY, 180, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#999'; ctx.font = '600 18px Poppins'; ctx.textAlign = 'center';
+    ctx.fillText(t.noPhoto, 540, photoY+5);
+  }
+
+  // Text - With proper spacing from photo
+  ctx.textAlign = 'center';
+
+  // Happy text - now at 710 with space
+  ctx.fillStyle = '#CE1126';
+  ctx.font = '700 42px Poppins';
+  ctx.letterSpacing = '2px';
+  if(t.subHappy){
+    ctx.fillText(t.happy, 540, 710);
+    ctx.font = '700 38px Poppins';
+    ctx.fillText(t.subHappy, 540, 755);
+  } else {
+    ctx.fillText(t.happy, 540, 730);
+  }
+
+  ctx.fillStyle = '#111';
+  ctx.font = '700 62px "Playfair Display"';
+  const nameY = t.subHappy? 830 : 810;
+  ctx.fillText(`Amayi ${name}`, 540, nameY);
+
+  ctx.fillStyle = '#0B8223';
+  ctx.fillRect(440, nameY+20, 200, 4);
+
+  ctx.fillStyle = '#444';
+  ctx.font = '600 32px Poppins';
+  ctx.fillText(t.thank1, 540, nameY+90);
+  ctx.fillText(t.thank2, 540, nameY+135);
+
+  ctx.fillStyle = '#888';
+  ctx.font = '400 22px Poppins';
+  ctx.fillText(t.date, 540, nameY+200);
+
+  ctx.fillStyle = '#CE1126';
+  ctx.font = '700 28px Poppins';
+  ctx.fillText(t.bottom, 540, nameY+255);
+
+  // Malawi flag bottom
+  ctx.fillStyle = '#000'; ctx.fillRect(60, 1240, 320, 20);
+  ctx.fillStyle = '#CE1126'; ctx.fillRect(380, 1240, 320, 20);
+  ctx.fillStyle = '#0B8223'; ctx.fillRect(700, 1240, 320, 20);
+
+  document.getElementById('downloadBtn').style.display = 'block';
+  document.getElementById('waBtn').style.display = 'block';
+}
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+document.getElementById('downloadBtn').addEventListener('click', ()=>{
+  const link = document.createElement('a');
+  link.download = `Amayi-${document.getElementById('mothersName').value || 'anga'}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+document.getElementById('waBtn').addEventListener('click', async ()=>{
+  canvas.toBlob(async (blob)=>{
+    const file = new File([blob], 'mothers-day.png', {type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'Happy Mother\'s Day Amayi!'});
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent("Happy Mother's Day Amayi anga!")}`);
+    }
+  });
+});
+
+drawCard();
+</script>
+</body>
+</html>
